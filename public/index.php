@@ -13,7 +13,7 @@ $app = AppFactory::create();
 
 $app->addBodyParsingMiddleware();
 $app->addRoutingMiddleware();
-$app->addErrorMiddleware(true, false, false);
+$app->addErrorMiddleware(false, false, false);
 $container = $app->getContainer();
 
 
