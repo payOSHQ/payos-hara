@@ -72,16 +72,21 @@ class GetPaymentLink
         return $response
           ->withStatus(400);
       }
-      // remove special char
-      $orderName = str_replace('#', '', $haravanOrder["order"]['name']);
+
+      $orderName = Util::convertOrderName($haravanOrder["order"]['order_number']);
+      $phone = Util::convertPhoneNumber($haravanOrder["order"]['billing_address']['phone']);
       $data = [
         "orderCode" => (int) $orderId,
         "amount" => (int) $haravanOrder["order"]['total_price'],
-        "description" => $orderName,
+        "description" => $orderName . " " . $phone,
         "returnUrl" => $redirectUri,
         "cancelUrl" => $redirectUri
       ];
       $paymentLink = $payOS->createPaymentLink($data);
+      $checkoutUrl = $paymentLink['checkoutUrl'];
+      // update note in hara
+      $haravan->updateNoteOrder($orderId, 'payOS checkoutUrl:' . $checkoutUrl);
+
       $response->getBody()
         ->write(json_encode([
           'checkout_url' => $paymentLink['checkoutUrl'],

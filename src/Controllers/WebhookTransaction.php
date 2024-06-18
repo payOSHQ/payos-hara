@@ -35,6 +35,7 @@ class WebhookTransaction
       if ($body['data']['accountNumber'] === '12345678' && $body['data']['reference'] === 'TF230204212323') {
         return $response;
       }
+      $data = $body['data'];
       $orderCode = $body['data']['orderCode'];
       $haravanStatusOrder = $haravan->getOrderById($orderCode);
       if (!$haravanStatusOrder || !isset($haravanStatusOrder['order'])) {
@@ -45,6 +46,11 @@ class WebhookTransaction
         return $response;
       }
       $haravan->confirmOrder($orderCode);
+      // update note
+      $payOSCheckoutUrl = 'payOS checkoutUrl: ' . $_ENV['CHECKOUT_URL_HOST'] . '/web/' . $data['paymentLinkId'];
+      $tranNote = '  ^^ Số dư tài khoản vừa tăng ' . $data['amount'] . 'VND vào ' . $data['transactionDateTime'] . ' Mô tả ' . $data['description'] . ' Mã tham chiếu ' . $data['reference'] . ' Số tài khoản ' . $data['accountNumber'];
+      $haravan->updateNoteOrder($orderCode, $payOSCheckoutUrl . $tranNote);
+
       return $response;
     } catch (Exception $e) {
       $statusCode = $e->getCode() ?: 500;
