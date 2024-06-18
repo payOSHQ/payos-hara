@@ -16,15 +16,3 @@ composer install
 ```
  php -S localhost:8000 -t public
 ```
-
-- In folder public create file .htaccess
-```
-RewriteEngine On
-RewriteRule ^checkout\.js$ checkout.php [L]
-
-# Chuyển hướng tất cả các yêu cầu khác đến `index.php`
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^ index.php [QSA,L]
-
-```
