@@ -8,7 +8,29 @@ const showUI = (message, imgUrl, isError = false) => {
   </div>
   `;
 };
+const LOADING_UI = `
+  <style>
+  .loader-payos {
+    border: 10px solid #f3f3f3; 
+    border-top: 10px solid #6655ff; 
+    border-radius: 50% !important;
+    width: 50px;
+    height: 50px;
+    animation: spin-payos 2s linear infinite;
+  }
 
+  @keyframes spin-payos {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  </style>
+  <div style="display:flex; flex-direction: column; justify-content: center; align-items: center; height: 100%">
+    <div style="text-align: center; padding: 20px; ">
+      <div class="loader-payos"></div>
+      <p>Vui lòng chờ ...</p>
+    </div>
+  </div>
+`;
 const ERROR_UI = showUI(
   "Không thể hiển thị link thanh toán",
   "https://img.payos.vn/static/img/payos_hara/failed.png",
@@ -57,6 +79,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   contentImporter.style.border = "1px solid #d9d9d9 ";
   contentImporter.style.width = "100%";
   contentImporter.style.height = isMobileScreen() ? "620px" : "340px";
+  // add loading default
+  contentImporter.innerHTML = LOADING_UI;
+
   const additionalContent = document.querySelector(".thank-you-additional-content");
   additionalContent.appendChild(contentImporter);
 
@@ -101,17 +126,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   try {
-    const orderStatus = await handleFetchData(`get-status-order/${orderId}`);
-    if (orderStatus === "paid") {
+    const paymentLinkResponse = await handleFetchData(
+      `get-payment-link/${orderId}?redirect_uri=${window.location.origin}`
+    );
+    if (paymentLinkResponse?.financial_status === "paid") {
       contentImporter.innerHTML = SUCCESS_UI;
       return;
     }
-    const paymentLink = await handleFetchData(`create-payment-link/${orderId}`, "POST", {
-      redirect_uri: window.location.origin,
-    });
-    const { checkout_url } = paymentLink;
-    paymentLinkOrigin = checkout_url;
-    const paymentLinkDialogUrl = `${checkout_url}?iframe=true&redirect_uri=${window.location.origin}&embedded=true`;
+    if (!paymentLinkResponse?.checkout_url) {
+      contentImporter.innerHTML = ERROR_UI;
+      return;
+    }
+    paymentLinkOrigin = paymentLinkResponse?.checkout_url;
+    const paymentLinkDialogUrl = `${paymentLinkResponse?.checkout_url}?iframe=true&redirect_uri=${window.location.origin}&embedded=true`;
 
     contentImporter.innerHTML = `
       <iframe src="${paymentLinkDialogUrl}" style="height: 100%; width: 100%; border: none"  allow="clipboard-read; clipboard-write"/>
