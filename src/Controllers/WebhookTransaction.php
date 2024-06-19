@@ -37,19 +37,18 @@ class WebhookTransaction
       }
       $data = $body['data'];
       $orderCode = $body['data']['orderCode'];
-      $haravanStatusOrder = $haravan->getOrderById($orderCode);
-      if (!$haravanStatusOrder || !isset($haravanStatusOrder['order'])) {
+      $haravanOrder = $haravan->getOrderById($orderCode);
+      if (!$haravanOrder || !isset($haravanOrder['order'])) {
         $response->getBody()->write('NOT FOUND ORDER');
         return $response->withStatus(400);
       }
-      if ($haravanStatusOrder['order']['financial_status'] === HARAVAN_ORDER_PAID_MESSAGE) {
+      if ($haravanOrder['order']['financial_status'] === HARAVAN_ORDER_PAID_MESSAGE) {
         return $response;
       }
       $haravan->confirmOrder($orderCode);
       // update note
-      $payOSCheckoutUrl = 'payOS checkoutUrl: ' . $_ENV['CHECKOUT_URL_HOST'] . '/web/' . $data['paymentLinkId'];
-      $tranNote = '  ^^ Số dư tài khoản vừa tăng ' . $data['amount'] . 'VND vào ' . $data['transactionDateTime'] . ' Mô tả ' . $data['description'] . ' Mã tham chiếu ' . $data['reference'] . ' Số tài khoản ' . $data['accountNumber'];
-      $haravan->updateNoteOrder($orderCode, $payOSCheckoutUrl . $tranNote);
+      $tranNote = ' ^^^^^^ Số dư tài khoản vừa tăng ' . $data['amount'] . 'VND vào ' . $data['transactionDateTime'] . ' Mô tả ' . $data['description'] . ' Mã tham chiếu ' . $data['reference'] . ' Số tài khoản ' . $data['accountNumber'];
+      $haravan->updateNoteOrder($orderCode, $haravanOrder['order']['note'] . $tranNote);
 
       return $response;
     } catch (Exception $e) {

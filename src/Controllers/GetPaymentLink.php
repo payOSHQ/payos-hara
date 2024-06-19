@@ -85,7 +85,7 @@ class GetPaymentLink
       $paymentLink = $payOS->createPaymentLink($data);
       $checkoutUrl = $paymentLink['checkoutUrl'];
       // update note in hara
-      $haravan->updateNoteOrder($orderId, 'payOS checkoutUrl:' . $checkoutUrl);
+      $haravan->updateNoteOrder($orderId, $haravanOrder['order']['note'] . ' ^^^^^^ payOS checkoutUrl:' . $checkoutUrl);
 
       $response->getBody()
         ->write(json_encode([
