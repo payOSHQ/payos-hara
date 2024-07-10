@@ -51,7 +51,7 @@ class WebhookTransaction
       return $response;
     } catch (Exception $e) {
       $response->getBody()->write(json_encode(['error' => $e->getMessage(), 'code' => $e->getCode()]));
-      return $response->withStatus(500);
+      return $response->withStatus(400);
     }
   }
 }
