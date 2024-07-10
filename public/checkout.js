@@ -137,8 +137,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       contentImporter.innerHTML = ERROR_UI;
       return;
     }
-    paymentLinkOrigin = paymentLinkResponse?.checkout_url;
-    const paymentLinkDialogUrl = `${paymentLinkResponse?.checkout_url}?iframe=true&redirect_uri=${window.location.origin}&embedded=true`;
+    paymentLinkOrigin = paymentLinkResponse?.checkout_url.replace('/web/','/embedded/');
+    const paymentLinkDialogUrl = `${paymentLinkOrigin}?redirect_uri=${window.location.origin}`;
 
     contentImporter.innerHTML = `
       <iframe src="${paymentLinkDialogUrl}" style="height: 100%; width: 100%; border: none"  allow="clipboard-read; clipboard-write"/>
