@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Controllers;
@@ -19,18 +20,16 @@ class WebhookTransaction
     try {
       $contentType = $request->getHeaderLine('Content-Type');
       if (!strstr($contentType, 'application/json')) {
-        return $response->withStatus(400);
+        throw new Exception('Content is not in JSON');
       }
       $contents = json_decode(file_get_contents('php://input'), true);
       if (json_last_error() !== JSON_ERROR_NONE) {
-        return $response->withStatus(400);
+        throw new Exception('Parse JSON failed');
       }
 
       $request = $request->withParsedBody($contents);
       $body = $request->getParsedBody();
-      if (!$payOS->verifyPaymentWebhookData($body)) {
-        return $response->withStatus(400);
-      }
+      $payOS->verifyPaymentWebhookData($body);
       // check demo data when confirm hook
       if ($body['data']['accountNumber'] === '12345678' && $body['data']['reference'] === 'TF230204212323') {
         return $response;
@@ -39,8 +38,7 @@ class WebhookTransaction
       $orderCode = $body['data']['orderCode'];
       $haravanOrder = $haravan->getOrderById($orderCode);
       if (!$haravanOrder || !isset($haravanOrder['order'])) {
-        $response->getBody()->write('NOT FOUND ORDER');
-        return $response->withStatus(400);
+        throw new Exception('Not found order');
       }
       if ($haravanOrder['order']['financial_status'] === HARAVAN_ORDER_PAID_MESSAGE) {
         return $response;
@@ -52,9 +50,8 @@ class WebhookTransaction
 
       return $response;
     } catch (Exception $e) {
-      $statusCode = $e->getCode() ?: 500;
-      $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
-      return $response->withStatus($statusCode);
+      $response->getBody()->write(json_encode(['error' => $e->getMessage(), 'code' => $e->getCode()]));
+      return $response->withStatus(500);
     }
   }
 }
